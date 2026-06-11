@@ -1,0 +1,227 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>DocAssist</title>
+    <style>
+      :root {
+        --bg: #0f1115;
+        --panel: #171a21;
+        --border: #262b36;
+        --text: #e6e8ec;
+        --muted: #98a2b3;
+        --accent: #5b8cff;
+        --accent-soft: #1d2740;
+        --danger: #ff6b6b;
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        background: var(--bg);
+        color: var(--text);
+        height: 100vh;
+        display: grid;
+        grid-template-columns: 340px 1fr;
+      }
+      aside {
+        border-right: 1px solid var(--border);
+        padding: 20px;
+        overflow-y: auto;
+        background: var(--panel);
+      }
+      main { display: flex; flex-direction: column; height: 100vh; }
+      h1 { font-size: 18px; margin: 0 0 4px; }
+      .sub { color: var(--muted); font-size: 13px; margin-bottom: 20px; }
+      h2 { font-size: 13px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
+      .drop {
+        border: 1px dashed var(--border);
+        border-radius: 10px;
+        padding: 22px;
+        text-align: center;
+        color: var(--muted);
+        cursor: pointer;
+        transition: border-color .15s, background .15s;
+      }
+      .drop.dragover { border-color: var(--accent); background: var(--accent-soft); color: var(--text); }
+      .doc { padding: 10px 12px; border: 1px solid var(--border); border-radius: 8px; margin-top: 8px; font-size: 13px; }
+      .doc .row { display: flex; justify-content: space-between; gap: 8px; align-items: center; }
+      .doc .name { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+      .badge { font-size: 11px; padding: 2px 8px; border-radius: 999px; border: 1px solid var(--border); color: var(--muted); }
+      .badge.ready { color: #3ddc97; border-color: #225; }
+      .badge.failed { color: var(--danger); }
+      .badge.processing, .badge.pending { color: #ffcf6b; }
+      .del { background: none; border: none; color: var(--muted); cursor: pointer; }
+      .del:hover { color: var(--danger); }
+      .chat { flex: 1; overflow-y: auto; padding: 24px; display: flex; flex-direction: column; gap: 16px; }
+      .msg { max-width: 760px; padding: 14px 16px; border-radius: 12px; white-space: pre-wrap; line-height: 1.5; }
+      .msg.user { align-self: flex-end; background: var(--accent-soft); }
+      .msg.assistant { align-self: flex-start; background: var(--panel); border: 1px solid var(--border); }
+      .sources { margin-top: 10px; font-size: 12px; color: var(--muted); }
+      .sources a { color: var(--accent); text-decoration: none; }
+      .composer { display: flex; gap: 10px; padding: 16px 24px; border-top: 1px solid var(--border); background: var(--panel); }
+      textarea {
+        flex: 1; resize: none; height: 48px; padding: 12px; border-radius: 10px;
+        background: var(--bg); border: 1px solid var(--border); color: var(--text); font: inherit;
+      }
+      button.send { padding: 0 22px; border-radius: 10px; border: none; background: var(--accent); color: #fff; font-weight: 600; cursor: pointer; }
+      button.send:disabled { opacity: .5; cursor: not-allowed; }
+      .hint { color: var(--muted); font-size: 12px; padding: 0 24px 12px; }
+    </style>
+  </head>
+  <body>
+    <aside>
+      <h1>DocAssist</h1>
+      <div class="sub">RAG over your documents</div>
+      <div class="drop" id="drop">Drop a file or click to upload<br /><small>PDF, DOCX, TXT, MD</small></div>
+      <input type="file" id="file" hidden accept=".pdf,.docx,.txt,.md" />
+      <h2>Documents</h2>
+      <div id="docs"></div>
+    </aside>
+    <main>
+      <div class="chat" id="chat"></div>
+      <div class="hint" id="status"></div>
+      <div class="composer">
+        <textarea id="q" placeholder="Ask a question about your documents…"></textarea>
+        <button class="send" id="send">Send</button>
+      </div>
+    </main>
+    <script>
+      const api = (path) => `${window.location.origin}${path}`;
+      let conversationId = null;
+
+      const el = (id) => document.getElementById(id);
+      const chat = el("chat");
+
+      function addMessage(role, text) {
+        const node = document.createElement("div");
+        node.className = `msg ${role}`;
+        node.textContent = text;
+        chat.appendChild(node);
+        chat.scrollTop = chat.scrollHeight;
+        return node;
+      }
+
+      function renderSources(node, sources) {
+        if (!sources || !sources.length) return;
+        const box = document.createElement("div");
+        box.className = "sources";
+        box.innerHTML =
+          "Sources: " +
+          sources
+            .map(
+              (s) =>
+                `[${s.position}] <a href="${s.download_url}" target="_blank">${s.filename}</a> #${s.fragment} (${s.score.toFixed(3)})`
+            )
+            .join(" &middot; ");
+        node.appendChild(box);
+      }
+
+      async function loadDocuments() {
+        const res = await fetch(api("/documents"));
+        const data = await res.json();
+        const box = el("docs");
+        box.innerHTML = "";
+        for (const doc of data.items) {
+          const div = document.createElement("div");
+          div.className = "doc";
+          div.innerHTML = `
+            <div class="row">
+              <span class="name" title="${doc.filename}">${doc.filename}</span>
+              <button class="del" data-id="${doc.id}">&times;</button>
+            </div>
+            <div class="row" style="margin-top:6px">
+              <span class="badge ${doc.status}">${doc.status}</span>
+              <span>${doc.num_chunks} chunks</span>
+            </div>${doc.error ? `<div style="color:var(--danger);margin-top:6px">${doc.error}</div>` : ""}`;
+          box.appendChild(div);
+        }
+        box.querySelectorAll(".del").forEach((btn) =>
+          btn.addEventListener("click", () => deleteDocument(btn.dataset.id))
+        );
+      }
+
+      async function deleteDocument(id) {
+        await fetch(api(`/documents/${id}`), { method: "DELETE" });
+        loadDocuments();
+      }
+
+      async function upload(file) {
+        const form = new FormData();
+        form.append("file", file);
+        el("status").textContent = `Uploading ${file.name}…`;
+        const res = await fetch(api("/documents"), { method: "POST", body: form });
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({ message: res.statusText }));
+          el("status").textContent = `Upload failed: ${err.message}`;
+          return;
+        }
+        el("status").textContent = `Queued ${file.name} for ingestion.`;
+        setTimeout(loadDocuments, 800);
+      }
+
+      async function ask() {
+        const q = el("q").value.trim();
+        if (!q) return;
+        el("q").value = "";
+        el("send").disabled = true;
+        addMessage("user", q);
+        const node = addMessage("assistant", "");
+        let sources = [];
+        try {
+          const res = await fetch(api("/chat"), {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ question: q, conversation_id: conversationId, stream: true }),
+          });
+          const reader = res.body.getReader();
+          const decoder = new TextDecoder();
+          let buffer = "";
+          while (true) {
+            const { value, done } = await reader.read();
+            if (done) break;
+            buffer += decoder.decode(value, { stream: true });
+            const frames = buffer.split("\n\n");
+            buffer = frames.pop() || "";
+            for (const frame of frames) {
+              const evMatch = frame.match(/event: (.*)/);
+              const dataMatch = frame.match(/data: (.*)/);
+              if (!evMatch || !dataMatch) continue;
+              const payload = JSON.parse(dataMatch[1]);
+              if (evMatch[1] === "meta") conversationId = payload.conversation_id;
+              else if (evMatch[1] === "sources") sources = payload;
+              else if (evMatch[1] === "token") node.textContent += payload.content;
+              else if (evMatch[1] === "error") node.textContent += `\n[error] ${payload.message}`;
+              chat.scrollTop = chat.scrollHeight;
+            }
+          }
+          renderSources(node, sources);
+        } catch (e) {
+          node.textContent = `Request failed: ${e}`;
+        } finally {
+          el("send").disabled = false;
+        }
+      }
+
+      el("drop").addEventListener("click", () => el("file").click());
+      el("file").addEventListener("change", (e) => e.target.files[0] && upload(e.target.files[0]));
+      ["dragover", "dragleave", "drop"].forEach((evt) =>
+        el("drop").addEventListener(evt, (e) => {
+          e.preventDefault();
+          el("drop").classList.toggle("dragover", evt === "dragover");
+          if (evt === "drop" && e.dataTransfer.files[0]) upload(e.dataTransfer.files[0]);
+        })
+      );
+      el("send").addEventListener("click", ask);
+      el("q").addEventListener("keydown", (e) => {
+        if (e.key === "Enter" && !e.shiftKey) {
+          e.preventDefault();
+          ask();
+        }
+      });
+      loadDocuments();
+      setInterval(loadDocuments, 5000);
+    </script>
+  </body>
+</html>
