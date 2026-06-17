@@ -1,0 +1,50 @@
+name: docassist
+
+services:
+  db:
+    image: pgvector/pgvector:pg16
+    environment:
+      POSTGRES_USER: docassist
+      POSTGRES_PASSWORD: docassist
+      POSTGRES_DB: docassist
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U docassist"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    ports:
+      - "5432:5432"
+
+  app:
+    build: .
+    env_file: .env
+    environment:
+      DATABASE_URL: postgresql+asyncpg://docassist:docassist@db:5432/docassist
+      DATABASE_URL_SYNC: postgresql+psycopg://docassist:docassist@db:5432/docassist
+      PUBLIC_BASE_URL: http://localhost:8000
+    # Apply migrations before serving so the schema is always current.
+    command: sh -c "alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port 8000"
+    volumes:
+      - storage:/app/var/storage
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "8000:8000"
+
+  bot:
+    build: .
+    env_file: .env
+    environment:
+      API_BASE_URL: http://app:8000
+    command: ["python", "-m", "bot"]
+    depends_on:
+      app:
+        condition: service_started
+    restart: unless-stopped
+
+volumes:
+  pgdata:
+  storage:
