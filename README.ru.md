@@ -2,11 +2,24 @@
 
 # DocAssist
 
+[![CI](https://github.com/txltedxgod/docassist/actions/workflows/ci.yml/badge.svg)](https://github.com/txltedxgod/docassist/actions/workflows/ci.yml)
+![Python](https://img.shields.io/badge/Python-3.12-3776AB?logo=python&logoColor=white)
+![FastAPI](https://img.shields.io/badge/FastAPI-async-009688?logo=fastapi&logoColor=white)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-pgvector-4169E1?logo=postgresql&logoColor=white)
+[![Ruff](https://img.shields.io/badge/lint-ruff-261230?logo=ruff&logoColor=white)](https://github.com/astral-sh/ruff)
+![mypy](https://img.shields.io/badge/types-mypy-2A6DB2?logo=python&logoColor=white)
+![License: MIT](https://img.shields.io/badge/License-MIT-3DA639.svg)
+
 Production-grade **RAG-ассистент по вашим документам**. Загружайте PDF, Word, Markdown или текст; DocAssist извлекает, разбивает на чанки и строит эмбеддинги в **pgvector**, а затем отвечает на вопросы через стриминговый API — с инлайн-**источниками и ссылками на скачивание**. В комплекте — минималистичный веб-дашборд и **Telegram-бот** как второй интерфейс к тому же бэкенду.
 
-> _Сюда можно добавить скриншот или GIF дашборда._
->
-> `![DocAssist dashboard](docs/screenshot.png)`
+## Ключевые особенности
+
+- **Полностью асинхронно** — FastAPI + SQLAlchemy 2.0 (asyncpg); ингестия не блокирует запросы.
+- **Настоящий векторный поиск** — косинусная близость в pgvector, контекст с ограничением по токенам, инлайн-цитаты со ссылками на скачивание источников.
+- **Стриминг** — ответы отдаются через Server-Sent Events; есть и буферизованный JSON-режим.
+- **Отказоустойчивость** — ретраи с экспоненциальной задержкой вокруг LLM, единый формат ошибок, структурное JSON-логирование.
+- **Два интерфейса, один бэкенд** — веб-дашборд и Telegram-бот на aiogram 3.
+- **Удобно поддерживать** — миграции Alembic, типизация (mypy) и линтинг (ruff), зелёный CI на каждый push, юнит- и интеграционные тесты против реального Postgres.
 
 ---
 
