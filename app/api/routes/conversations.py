@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from http import HTTPStatus
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Response
 
 from app.api.deps import ConversationRepoDep
 from app.core.exceptions import ConversationNotFoundError
@@ -49,9 +49,10 @@ async def get_conversation(
 @router.delete("/{conversation_id}", status_code=HTTPStatus.NO_CONTENT)
 async def delete_conversation(
     conversation_id: int, conversations: ConversationRepoDep
-) -> None:
+) -> Response:
     """Delete a conversation and its messages (cascade)."""
     conversation = await conversations.get(conversation_id)
     if conversation is None:
         raise ConversationNotFoundError()
     await conversations.delete(conversation)
+    return Response(status_code=HTTPStatus.NO_CONTENT)

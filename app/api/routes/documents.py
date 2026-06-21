@@ -4,7 +4,7 @@ from __future__ import annotations
 import os
 from http import HTTPStatus
 
-from fastapi import APIRouter, File, UploadFile
+from fastapi import APIRouter, File, Response, UploadFile
 from fastapi.responses import FileResponse
 
 from app.api.deps import DocumentRepoDep, QueueDep, SessionDep, StorageDep
@@ -116,7 +116,7 @@ async def delete_document(
     documents: DocumentRepoDep,
     storage: StorageDep,
     session: SessionDep,
-) -> None:
+) -> Response:
     """Delete a document, its chunks (cascade) and its stored file."""
     document = await documents.get(document_id)
     if document is None:
@@ -127,3 +127,4 @@ async def delete_document(
     await session.commit()
     storage.delete(storage_key)
     _logger.info("document_deleted", document_id=document_id)
+    return Response(status_code=HTTPStatus.NO_CONTENT)
