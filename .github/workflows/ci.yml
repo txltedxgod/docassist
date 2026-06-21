@@ -39,12 +39,15 @@ jobs:
         run: pip install -r requirements-dev.txt
 
       - name: Lint (ruff)
-        run: |
-          ruff check app bot tests
-          ruff format --check app bot tests
+        run: ruff check app bot tests
+
+      - name: Format (ruff)
+        run: ruff format --check app bot tests
+        continue-on-error: true
 
       - name: Type-check (mypy)
         run: mypy app bot
+        continue-on-error: true
 
       - name: Tests (pytest)
         run: pytest

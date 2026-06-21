@@ -43,10 +43,20 @@ def get_session_factory() -> async_sessionmaker[AsyncSession]:
 
 
 async def get_session() -> AsyncGenerator[AsyncSession, None]:
-    """FastAPI dependency yielding a request-scoped session."""
+    """Yield a request-scoped session, committing on success.
+
+    Treating each request as an atomic unit of work means handlers don't have to
+    remember to commit; those that must persist before scheduling background
+    work (e.g. uploads) can still commit explicitly.
+    """
     factory = get_session_factory()
     async with factory() as session:
-        yield session
+        try:
+            yield session
+            await session.commit()
+        except Exception:
+            await session.rollback()
+            raise
 
 
 async def dispose_engine() -> None:

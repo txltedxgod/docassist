@@ -97,6 +97,11 @@ async def client(
 def _session_override(session_factory: async_sessionmaker):
     async def _get_session() -> AsyncIterator:
         async with session_factory() as session:
-            yield session
+            try:
+                yield session
+                await session.commit()
+            except Exception:
+                await session.rollback()
+                raise
 
     return _get_session

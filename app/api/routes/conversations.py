@@ -55,4 +55,3 @@ async def delete_conversation(
     if conversation is None:
         raise ConversationNotFoundError()
     await conversations.delete(conversation)
-    await conversations._session.commit()  # noqa: SLF001 - commit the request unit of work

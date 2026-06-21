@@ -7,7 +7,7 @@ from http import HTTPStatus
 from fastapi import APIRouter, File, UploadFile
 from fastapi.responses import FileResponse
 
-from app.api.deps import DocumentRepoDep, QueueDep, StorageDep
+from app.api.deps import DocumentRepoDep, QueueDep, SessionDep, StorageDep
 from app.core.config import get_settings
 from app.core.exceptions import (
     DocumentNotFoundError,
@@ -35,6 +35,7 @@ async def upload_document(
     documents: DocumentRepoDep,
     storage: StorageDep,
     queue: QueueDep,
+    session: SessionDep,
     file: UploadFile = File(...),
 ) -> DocumentOut:
     """Validate and store an uploaded file, then queue it for ingestion.
@@ -66,7 +67,8 @@ async def upload_document(
         size_bytes=len(data),
         storage_path=storage_key,
     )
-    await documents._session.commit()  # noqa: SLF001 - commit the request unit of work
+    # Commit before enqueueing so the background worker can load the document.
+    await session.commit()
     await queue.enqueue(document.id)
     _logger.info("document_uploaded", document_id=document.id, filename=filename)
     return DocumentOut.model_validate(document)
@@ -110,14 +112,18 @@ async def download_document(
 
 @router.delete("/{document_id}", status_code=HTTPStatus.NO_CONTENT)
 async def delete_document(
-    document_id: int, documents: DocumentRepoDep, storage: StorageDep
+    document_id: int,
+    documents: DocumentRepoDep,
+    storage: StorageDep,
+    session: SessionDep,
 ) -> None:
     """Delete a document, its chunks (cascade) and its stored file."""
     document = await documents.get(document_id)
     if document is None:
         raise DocumentNotFoundError()
     storage_key = document.storage_path
+    # Commit before touching storage so the file is only removed once the row is.
     await documents.delete(document)
-    await documents._session.commit()  # noqa: SLF001 - commit the request unit of work
+    await session.commit()
     storage.delete(storage_key)
     _logger.info("document_deleted", document_id=document_id)
