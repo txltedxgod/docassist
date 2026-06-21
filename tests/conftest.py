@@ -30,9 +30,18 @@ TEST_DATABASE_URL = os.environ.get(
 )
 
 
-@pytest_asyncio.fixture(scope="session")
+@pytest_asyncio.fixture
 async def engine() -> AsyncIterator:
-    """Create the schema once for the whole test session."""
+    """Create a fresh schema on a per-test engine.
+
+    The engine is function-scoped on purpose: it guarantees each test and its
+    background tasks use the same event loop as the connections they open. A
+    session-scoped engine creates asyncpg connections on one loop and hands them
+    to tests running on other loops (pytest-asyncio uses a per-test loop by
+    default), which surfaces as the asyncpg error
+    "cannot perform operation: another operation is in progress". Recreating the
+    schema per test also makes every test fully isolated without manual TRUNCATE.
+    """
     engine = create_async_engine(TEST_DATABASE_URL, future=True)
     async with engine.begin() as conn:
         await conn.execute(text("CREATE EXTENSION IF NOT EXISTS vector"))
@@ -46,16 +55,6 @@ async def engine() -> AsyncIterator:
 async def session_factory(engine) -> async_sessionmaker:
     """Return a session factory bound to the test engine."""
     return async_sessionmaker(bind=engine, expire_on_commit=False)
-
-
-@pytest_asyncio.fixture(autouse=True)
-async def _clean_tables(engine) -> AsyncIterator[None]:
-    """Truncate all tables between tests for isolation."""
-    yield
-    async with engine.begin() as conn:
-        await conn.execute(
-            text("TRUNCATE documents, chunks, conversations, messages RESTART IDENTITY CASCADE")
-        )
 
 
 @pytest.fixture
