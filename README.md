@@ -1,5 +1,7 @@
 # DocAssist
 
+[English](README.md) · [Русский](README.ru.md) · [Українська](README.uk.md)
+
 A production-grade **RAG (retrieval-augmented generation) assistant** over your
 own documents. Upload PDFs, Word, Markdown or text files; DocAssist extracts,
 chunks and embeds them into **pgvector**, then answers your questions over a
