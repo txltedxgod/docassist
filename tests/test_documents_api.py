@@ -1,4 +1,5 @@
 """Tests for document upload validation and error handling."""
+
 from __future__ import annotations
 
 import pytest
@@ -32,7 +33,13 @@ async def test_missing_document_returns_404(client) -> None:
 async def test_upload_then_list_and_delete(client) -> None:
     upload = await client.post(
         "/documents",
-        files={"file": ("intro.md", b"# Title\n\nDocAssist ingests documents.", "text/markdown")},
+        files={
+            "file": (
+                "intro.md",
+                b"# Title\n\nDocAssist ingests documents.",
+                "text/markdown",
+            )
+        },
     )
     assert upload.status_code == 202
     document_id = upload.json()["id"]

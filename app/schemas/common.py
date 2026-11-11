@@ -1,4 +1,5 @@
 """Shared API schema primitives."""
+
 from __future__ import annotations
 
 from pydantic import BaseModel, Field
@@ -9,7 +10,9 @@ class ErrorResponse(BaseModel):
 
     code: str = Field(description="Stable machine-readable error code.")
     message: str = Field(description="Human-readable error description.")
-    detail: object | None = Field(default=None, description="Optional structured detail.")
+    detail: object | None = Field(
+        default=None, description="Optional structured detail."
+    )
 
 
 class HealthResponse(BaseModel):

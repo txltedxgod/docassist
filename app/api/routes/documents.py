@@ -1,4 +1,5 @@
 """Document upload, listing, download and deletion endpoints."""
+
 from __future__ import annotations
 
 import os

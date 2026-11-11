@@ -1,4 +1,5 @@
 """Unit tests for the chunking logic (no I/O, no database)."""
+
 from __future__ import annotations
 
 import pytest

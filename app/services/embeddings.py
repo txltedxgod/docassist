@@ -1,4 +1,5 @@
 """Embedding client for an OpenAI-compatible embeddings endpoint."""
+
 from __future__ import annotations
 
 import httpx

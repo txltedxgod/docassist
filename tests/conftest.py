@@ -5,6 +5,7 @@ or the default) so vector search and cascading deletes are genuinely exercised.
 Only the LLM and embedding network boundaries are replaced by deterministic
 fakes from ``tests.fakes``.
 """
+
 from __future__ import annotations
 
 import os

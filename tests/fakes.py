@@ -4,6 +4,7 @@ These are intentionally not mocks-of-everything: they implement the same public
 interface as the real clients so services, repositories and the database under
 test exercise real code paths. Only the network boundary is replaced.
 """
+
 from __future__ import annotations
 
 import hashlib
@@ -38,7 +39,9 @@ class FakeEmbeddingClient:
 class FakeLLMClient:
     """LLM stub that echoes retrieved context so answers are assertable."""
 
-    def __init__(self, reply: str = "Based on the context [1], here is the answer.") -> None:
+    def __init__(
+        self, reply: str = "Based on the context [1], here is the answer."
+    ) -> None:
         self._reply = reply
 
     async def complete(self, messages: list[dict], *, temperature: float = 0.2) -> str:

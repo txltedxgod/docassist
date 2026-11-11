@@ -1,4 +1,5 @@
 """Data-access layer for documents."""
+
 from __future__ import annotations
 
 from sqlalchemy import select
@@ -41,12 +42,7 @@ class DocumentRepository:
 
     async def list(self, *, limit: int = 100, offset: int = 0) -> list[Document]:
         """Return documents ordered by most recently created first."""
-        stmt = (
-            select(Document)
-            .order_by(Document.id.desc())
-            .limit(limit)
-            .offset(offset)
-        )
+        stmt = select(Document).order_by(Document.id.desc()).limit(limit).offset(offset)
         result = await self._session.execute(stmt)
         return list(result.scalars().all())
 

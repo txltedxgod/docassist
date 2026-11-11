@@ -5,6 +5,7 @@ whitespace-delimited words is a stable, deterministic proxy for token budgeting
 and keeps chunking testable without network access. Splitting prefers paragraph
 and sentence boundaries so chunks stay semantically coherent.
 """
+
 from __future__ import annotations
 
 import re
@@ -107,9 +108,7 @@ def chunk_text(
             current = []
             for start in range(0, len(unit_words), chunk_size - overlap):
                 window = unit_words[start : start + chunk_size]
-                chunks.append(
-                    TextChunk(len(chunks), " ".join(window), len(window))
-                )
+                chunks.append(TextChunk(len(chunks), " ".join(window), len(window)))
             continue
 
         if len(current) + len(unit_words) > chunk_size:

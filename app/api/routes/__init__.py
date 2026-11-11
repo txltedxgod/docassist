@@ -1,4 +1,5 @@
 """API routers aggregated under a single entry point."""
+
 from fastapi import APIRouter
 
 from app.api.routes import chat, conversations, documents, health
