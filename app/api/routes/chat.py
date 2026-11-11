@@ -1,4 +1,5 @@
 """Chat endpoint with both streaming (SSE) and buffered responses."""
+
 from __future__ import annotations
 
 import json

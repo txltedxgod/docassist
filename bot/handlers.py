@@ -1,10 +1,10 @@
 """aiogram message handlers backing the Telegram interface."""
+
 from __future__ import annotations
 
 import httpx
 from aiogram import F, Router
 from aiogram.filters import Command
-from aiogram.types import Document as TgDocument
 from aiogram.types import Message
 
 from app.core.config import get_settings
@@ -46,8 +46,9 @@ async def handle_reset(message: Message) -> None:
 @router.message(F.document)
 async def handle_document(message: Message) -> None:
     """Download an attached document and forward it to the ingestion API."""
-    document: TgDocument = message.document
-    assert document is not None  # guarded by the F.document filter
+    document = message.document
+    if document is None or message.bot is None:
+        return
 
     settings = get_settings()
     if document.file_size and document.file_size > settings.upload_size_limit:
@@ -88,7 +89,8 @@ async def handle_question(message: Message) -> None:
         return
 
     conversation_id = _conversations.get(message.chat.id)
-    await message.bot.send_chat_action(message.chat.id, "typing")
+    if message.bot is not None:
+        await message.bot.send_chat_action(message.chat.id, "typing")
     try:
         answer = await _client().ask(question, conversation_id=conversation_id)
     except httpx.HTTPError as exc:

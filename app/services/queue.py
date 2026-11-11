@@ -4,6 +4,7 @@ Uploads return immediately after persisting the file; the heavy pipeline runs on
 a bounded :class:`asyncio.Queue` drained by a pool of worker tasks. Each job gets
 its own database session so a slow document never holds a request-scoped session.
 """
+
 from __future__ import annotations
 
 import asyncio
@@ -44,7 +45,9 @@ class IngestionQueue:
         if self._workers:
             return
         for i in range(self._settings.ingestion_workers):
-            self._workers.append(asyncio.create_task(self._worker(i), name=f"ingest-{i}"))
+            self._workers.append(
+                asyncio.create_task(self._worker(i), name=f"ingest-{i}")
+            )
         _logger.info("ingestion_queue_started", workers=len(self._workers))
 
     async def stop(self) -> None:
@@ -61,7 +64,9 @@ class IngestionQueue:
     async def enqueue(self, document_id: int) -> None:
         """Schedule a document for ingestion."""
         await self._queue.put(document_id)
-        _logger.info("document_enqueued", document_id=document_id, depth=self._queue.qsize())
+        _logger.info(
+            "document_enqueued", document_id=document_id, depth=self._queue.qsize()
+        )
 
     async def _worker(self, worker_id: int) -> None:
         while True:
@@ -79,7 +84,9 @@ class IngestionQueue:
                 raise
             except Exception:  # noqa: BLE001 - a single bad job must not kill the worker
                 _logger.exception(
-                    "ingestion_worker_error", worker_id=worker_id, document_id=document_id
+                    "ingestion_worker_error",
+                    worker_id=worker_id,
+                    document_id=document_id,
                 )
             finally:
                 self._queue.task_done()

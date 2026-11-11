@@ -1,4 +1,5 @@
 """Document ORM model and its lifecycle status."""
+
 from __future__ import annotations
 
 from enum import StrEnum

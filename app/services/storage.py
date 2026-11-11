@@ -4,6 +4,7 @@ Files are stored under a configurable directory using opaque UUID names to avoid
 collisions and path traversal from user-supplied filenames. The download
 endpoint streams them back using the original filename for display.
 """
+
 from __future__ import annotations
 
 import uuid

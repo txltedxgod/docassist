@@ -5,6 +5,7 @@ which carries an HTTP status, a stable machine-readable ``code`` and a
 human-readable message. The API layer turns these into consistent JSON
 responses (see ``app.api.errors``).
 """
+
 from __future__ import annotations
 
 from http import HTTPStatus

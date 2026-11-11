@@ -1,4 +1,5 @@
 """Text extraction from supported document formats."""
+
 from __future__ import annotations
 
 import io

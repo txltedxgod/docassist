@@ -3,6 +3,7 @@
 Kept dependency-free on purpose: retrying transient LLM/embedding failures is
 core behaviour, so we don't want it to hinge on an optional third-party library.
 """
+
 from __future__ import annotations
 
 import asyncio
@@ -67,6 +68,8 @@ async def retry_async(
     raise last_exc
 
 
-def as_tuple(exc_types: Iterable[type[BaseException]]) -> tuple[type[BaseException], ...]:
+def as_tuple(
+    exc_types: Iterable[type[BaseException]],
+) -> tuple[type[BaseException], ...]:
     """Materialise an iterable of exception types into a tuple."""
     return tuple(exc_types)

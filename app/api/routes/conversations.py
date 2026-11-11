@@ -1,4 +1,5 @@
 """Conversation history endpoints."""
+
 from __future__ import annotations
 
 from http import HTTPStatus
@@ -42,7 +43,9 @@ async def get_conversation(
         title=conversation.title,
         created_at=conversation.created_at,
         updated_at=conversation.updated_at,
-        messages=[MessageOut.model_validate(message) for message in conversation.messages],
+        messages=[
+            MessageOut.model_validate(message) for message in conversation.messages
+        ],
     )
 
 

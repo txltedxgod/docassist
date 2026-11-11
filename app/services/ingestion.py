@@ -1,4 +1,5 @@
 """Document ingestion pipeline: extract -> chunk -> embed -> persist."""
+
 from __future__ import annotations
 
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -47,7 +48,9 @@ class IngestionService:
 
         await self._documents.set_status(document, DocumentStatus.PROCESSING)
         await self._session.commit()
-        _logger.info("ingestion_started", document_id=document_id, filename=document.filename)
+        _logger.info(
+            "ingestion_started", document_id=document_id, filename=document.filename
+        )
 
         try:
             text = extract_text(
@@ -74,10 +77,14 @@ class IngestionService:
                 document, DocumentStatus.READY, num_chunks=len(chunks)
             )
             await self._session.commit()
-            _logger.info("ingestion_completed", document_id=document_id, chunks=len(chunks))
+            _logger.info(
+                "ingestion_completed", document_id=document_id, chunks=len(chunks)
+            )
         except AppError as exc:
             await self._fail(document_id, exc.message)
-            _logger.warning("ingestion_failed", document_id=document_id, error=exc.message)
+            _logger.warning(
+                "ingestion_failed", document_id=document_id, error=exc.message
+            )
         except Exception as exc:  # noqa: BLE001 - persist unexpected errors, keep worker alive
             await self._fail(document_id, f"Unexpected error: {exc}")
             _logger.exception("ingestion_crashed", document_id=document_id)

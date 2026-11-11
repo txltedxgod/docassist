@@ -1,5 +1,8 @@
 """Data-access layer for conversations and messages."""
+
 from __future__ import annotations
+
+import builtins
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -48,7 +51,7 @@ class ConversationRepository:
 
     async def recent_messages(
         self, conversation_id: int, *, limit: int
-    ) -> list[Message]:
+    ) -> builtins.list[Message]:
         """Return up to ``limit`` most recent messages in chronological order."""
         stmt = (
             select(Message)
@@ -67,7 +70,7 @@ class ConversationRepository:
         *,
         role: MessageRole,
         content: str,
-        sources: list[dict] | None = None,
+        sources: builtins.list[dict] | None = None,
     ) -> Message:
         """Append a message to a conversation."""
         message = Message(

@@ -1,4 +1,5 @@
 """RAG orchestration: retrieve, build context, prompt the LLM, persist history."""
+
 from __future__ import annotations
 
 from collections.abc import AsyncIterator
@@ -85,7 +86,9 @@ class RAGService:
         )
         return conversation_id, prompt, sources
 
-    async def answer(self, *, question: str, conversation_id: int | None) -> tuple[int, str, list[Source]]:
+    async def answer(
+        self, *, question: str, conversation_id: int | None
+    ) -> tuple[int, str, list[Source]]:
         """Produce a complete (non-streaming) answer and persist it."""
         conversation_id, prompt, sources = await self.prepare(
             question=question, conversation_id=conversation_id
@@ -104,12 +107,18 @@ class RAGService:
             yield token
         await self._persist_answer(conversation_id, "".join(collected), sources)
 
-    async def _ensure_conversation(self, conversation_id: int | None, question: str) -> int:
+    async def _ensure_conversation(
+        self, conversation_id: int | None, question: str
+    ) -> int:
         if conversation_id is not None:
             existing = await self._conversations.get(conversation_id)
             if existing is not None:
                 return existing.id
-        title = question.strip().splitlines()[0][:80] if question.strip() else "New conversation"
+        title = (
+            question.strip().splitlines()[0][:80]
+            if question.strip()
+            else "New conversation"
+        )
         conversation = await self._conversations.create(title=title)
         return conversation.id
 

@@ -1,4 +1,5 @@
 """Async HTTP client used by the Telegram bot to talk to the API."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -24,7 +25,9 @@ class ApiClient:
 
     async def upload(self, *, filename: str, content: bytes, content_type: str) -> dict:
         """Upload a document fetched from Telegram."""
-        async with httpx.AsyncClient(base_url=self._base_url, timeout=self._timeout) as client:
+        async with httpx.AsyncClient(
+            base_url=self._base_url, timeout=self._timeout
+        ) as client:
             response = await client.post(
                 "/documents",
                 files={"file": (filename, content, content_type)},
@@ -34,7 +37,9 @@ class ApiClient:
 
     async def ask(self, question: str, *, conversation_id: int | None) -> ChatAnswer:
         """Ask a question using the buffered (non-streaming) endpoint."""
-        async with httpx.AsyncClient(base_url=self._base_url, timeout=self._timeout) as client:
+        async with httpx.AsyncClient(
+            base_url=self._base_url, timeout=self._timeout
+        ) as client:
             response = await client.post(
                 "/chat",
                 json={

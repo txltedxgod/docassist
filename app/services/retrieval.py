@@ -1,4 +1,5 @@
 """Semantic retrieval and prompt-context assembly."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -30,7 +31,9 @@ class RetrievalService:
         self._embeddings = embedding_client
         self._settings = settings or get_settings()
 
-    async def retrieve(self, query: str, *, top_k: int | None = None) -> list[ScoredChunk]:
+    async def retrieve(
+        self, query: str, *, top_k: int | None = None
+    ) -> list[ScoredChunk]:
         """Return the most relevant chunks for ``query``."""
         query = query.strip()
         if not query:

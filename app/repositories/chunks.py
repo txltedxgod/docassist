@@ -1,4 +1,5 @@
 """Data-access layer for chunks and vector similarity search."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass

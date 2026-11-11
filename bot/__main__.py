@@ -1,4 +1,5 @@
 """Entry point for the Telegram bot: `python -m bot`."""
+
 from __future__ import annotations
 
 import asyncio

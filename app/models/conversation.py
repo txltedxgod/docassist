@@ -1,4 +1,5 @@
 """Conversation and message ORM models for dialogue history."""
+
 from __future__ import annotations
 
 from enum import StrEnum
@@ -23,7 +24,9 @@ class Conversation(Base, TimestampMixin):
     __tablename__ = "conversations"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
-    title: Mapped[str] = mapped_column(String(512), default="New conversation", nullable=False)
+    title: Mapped[str] = mapped_column(
+        String(512), default="New conversation", nullable=False
+    )
 
     messages: Mapped[list["Message"]] = relationship(
         back_populates="conversation",

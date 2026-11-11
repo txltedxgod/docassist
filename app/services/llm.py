@@ -4,6 +4,7 @@ Provides both buffered and streaming (SSE-style) completions. Transient network
 failures while establishing the request are retried with backoff; once tokens
 start streaming we do not retry, to avoid emitting duplicated partial answers.
 """
+
 from __future__ import annotations
 
 import json
@@ -28,7 +29,9 @@ class LLMClient:
     def __init__(self, settings: Settings | None = None) -> None:
         self._settings = settings or get_settings()
 
-    async def complete(self, messages: list[ChatMessage], *, temperature: float = 0.2) -> str:
+    async def complete(
+        self, messages: list[ChatMessage], *, temperature: float = 0.2
+    ) -> str:
         """Return a full completion for ``messages``.
 
         Raises:

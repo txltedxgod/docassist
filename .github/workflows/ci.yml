@@ -28,9 +28,9 @@ jobs:
       TEST_DATABASE_URL: postgresql+asyncpg://docassist:docassist@localhost:5432/docassist_test
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: "3.12"
           cache: pip
@@ -43,11 +43,9 @@ jobs:
 
       - name: Format (ruff)
         run: ruff format --check app bot tests
-        continue-on-error: true
 
       - name: Type-check (mypy)
         run: mypy app bot
-        continue-on-error: true
 
       - name: Tests (pytest)
         run: pytest

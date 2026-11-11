@@ -1,4 +1,5 @@
 """Tests for semantic search and context assembly against the test database."""
+
 from __future__ import annotations
 
 import pytest
@@ -10,7 +11,9 @@ from app.services.retrieval import RetrievalService
 pytestmark = pytest.mark.asyncio
 
 
-async def _seed_document(session, embedding_client, *, filename: str, chunks: list[str]):
+async def _seed_document(
+    session, embedding_client, *, filename: str, chunks: list[str]
+):
     document = Document(
         filename=filename,
         content_type="text/plain",
@@ -25,13 +28,18 @@ async def _seed_document(session, embedding_client, *, filename: str, chunks: li
     embeddings = await embedding_client.embed_texts(chunks)
     await ChunkRepository(session).add_many(
         document.id,
-        [(i, content, len(content.split()), emb) for i, (content, emb) in enumerate(zip(chunks, embeddings))],
+        [
+            (i, content, len(content.split()), emb)
+            for i, (content, emb) in enumerate(zip(chunks, embeddings))
+        ],
     )
     await session.commit()
     return document
 
 
-async def test_search_ranks_relevant_chunk_first(session_factory, embedding_client) -> None:
+async def test_search_ranks_relevant_chunk_first(
+    session_factory, embedding_client
+) -> None:
     async with session_factory() as session:
         await _seed_document(
             session,
@@ -50,7 +58,9 @@ async def test_search_ranks_relevant_chunk_first(session_factory, embedding_clie
     assert results[0].score >= results[-1].score
 
 
-async def test_build_context_respects_token_budget(session_factory, embedding_client) -> None:
+async def test_build_context_respects_token_budget(
+    session_factory, embedding_client
+) -> None:
     async with session_factory() as session:
         await _seed_document(
             session,
@@ -67,10 +77,15 @@ async def test_build_context_respects_token_budget(session_factory, embedding_cl
     assert context.text.startswith("[1] Source: big.txt")
 
 
-async def test_search_ignores_non_ready_documents(session_factory, embedding_client) -> None:
+async def test_search_ignores_non_ready_documents(
+    session_factory, embedding_client
+) -> None:
     async with session_factory() as session:
         doc = await _seed_document(
-            session, embedding_client, filename="draft.txt", chunks=["pending content here"]
+            session,
+            embedding_client,
+            filename="draft.txt",
+            chunks=["pending content here"],
         )
         doc.status = DocumentStatus.PROCESSING
         await session.commit()

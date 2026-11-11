@@ -1,4 +1,5 @@
 """Exception handlers translating errors into the uniform JSON envelope."""
+
 from __future__ import annotations
 
 from fastapi import FastAPI, Request
@@ -13,7 +14,9 @@ from app.schemas.common import ErrorResponse
 _logger = get_logger(__name__)
 
 
-def _envelope(status_code: int, code: str, message: str, detail: object = None) -> JSONResponse:
+def _envelope(
+    status_code: int, code: str, message: str, detail: object = None
+) -> JSONResponse:
     payload = ErrorResponse(code=code, message=message, detail=detail)
     return JSONResponse(status_code=status_code, content=payload.model_dump())
 
@@ -28,8 +31,12 @@ def register_exception_handlers(app: FastAPI) -> None:
         return _envelope(exc.status_code, exc.code, exc.message, exc.detail)
 
     @app.exception_handler(RequestValidationError)
-    async def _handle_validation(_: Request, exc: RequestValidationError) -> JSONResponse:
-        return _envelope(422, "validation_error", "Request validation failed.", exc.errors())
+    async def _handle_validation(
+        _: Request, exc: RequestValidationError
+    ) -> JSONResponse:
+        return _envelope(
+            422, "validation_error", "Request validation failed.", exc.errors()
+        )
 
     @app.exception_handler(StarletteHTTPException)
     async def _handle_http(_: Request, exc: StarletteHTTPException) -> JSONResponse:

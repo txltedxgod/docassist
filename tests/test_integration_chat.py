@@ -1,4 +1,5 @@
 """End-to-end test: upload a document, wait for ingestion, then ask a question."""
+
 from __future__ import annotations
 
 import asyncio
@@ -47,7 +48,9 @@ async def test_full_cycle_upload_question_answer(client) -> None:
     assert body["answer"]
     assert body["sources"], "expected at least one cited source"
     assert body["sources"][0]["filename"] == "about.txt"
-    assert body["sources"][0]["download_url"].endswith(f"/documents/{document_id}/download")
+    assert body["sources"][0]["download_url"].endswith(
+        f"/documents/{document_id}/download"
+    )
 
     # The conversation and its messages are persisted.
     conversation_id = body["conversation_id"]

@@ -1,4 +1,5 @@
 """FastAPI application factory and lifespan wiring."""
+
 from __future__ import annotations
 
 from contextlib import asynccontextmanager

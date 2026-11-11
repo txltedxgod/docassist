@@ -1,4 +1,5 @@
 """Declarative base and shared metadata for all ORM models."""
+
 from __future__ import annotations
 
 from datetime import datetime
